@@ -3,9 +3,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.sql.Connection;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class ShopApp extends JFrame implements ActionListener{
@@ -17,6 +21,9 @@ public class ShopApp extends JFrame implements ActionListener{
 	JButton m_chat;//관리자와 1:1 채팅화면
 	
 	Page[] pages=new Page[4];//페이지 수 만큼 배열확보
+	ConnectionManager connectionManager;
+	Connection con;//패널들 즉 페이지들이 모두 접근할 수 있도록 
+							//부모 컨테이너인 윈도우에 보유해놓자!!
 	
 	public ShopApp() {
 		p_north 		= new JPanel();
@@ -31,6 +38,9 @@ public class ShopApp extends JFrame implements ActionListener{
 		pages[1]=new ShoppingMain(this,"쇼핑몰메인",Color.RED,700,500,false);
 		pages[2]=new Login(this,"로그인",Color.BLUE,700,500,false);
 		pages[3]=new Chatting(this,"1:1채팅",Color.GREEN,700,500,false);
+		
+		//접속관리자 생성 
+		connectionManager = new ConnectionManager();
 		
 		//스타일적용
 		p_north.setBackground(Color.BLACK);
@@ -65,6 +75,22 @@ public class ShopApp extends JFrame implements ActionListener{
 		m_main.addActionListener(this);
 		m_login.addActionListener(this);
 		m_chat.addActionListener(this);
+		
+		//오라클 접속!!
+		con=connectionManager.getConnection();
+		if(con==null) {
+			JOptionPane.showMessageDialog(this, "데이터베이 접속 실패");
+		}else {
+			JOptionPane.showMessageDialog(this, "데이터베이 접속 성공");
+		}
+		
+		//접속해제 
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				connectionManager.closeDB(con);//DB접속해제
+				System.exit(0);//프로세스 종료
+			}
+		});
 	}
 	
 	
