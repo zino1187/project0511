@@ -9,6 +9,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +31,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import homework.lib.FileManager;
+import homework.lib.Formatter;
 
 //하나의 화면은 앞으로 패널로 처리하자!~!
 public class ProductManage extends Page{
@@ -41,6 +44,7 @@ public class ProductManage extends Page{
 	JPanel p_thumb;//등록시 보여질 미리보기 썸네일 
 	JButton bt_regist;// 등록버튼
 	JButton bt_list;// 목록버튼
+	JButton bt_del;// 삭제버튼
 	
 	//-------------------------센터영역
 	JPanel p_content;//가운테 들어갈 모든 컴포넌트의 어버이!!
@@ -63,6 +67,9 @@ public class ProductManage extends Page{
 	File thumbFile;//썸네일 처리를  위한 파일객체
 	String copyName;//새롭게 부여된 파일명!!
 	ProductModel productModel;
+	int product_id;//현재 사용자가 보고있는 레코드의 식별값
+						//이값이 0이면, 유저는 제품을 선택한적이 없는거다!!
+	String delFile;
 	
 	public ProductManage(ShopApp shopApp, String title,Color color, int width,int height,boolean showFlag) {
 		super(shopApp,title,color,width,height,showFlag);
@@ -82,13 +89,18 @@ public class ProductManage extends Page{
 		
 		bt_regist = new JButton("등록");
 		bt_list = new JButton("목록");
+		bt_del = new JButton("삭제");
 		
 		p_content=new JPanel();
 		table = new JTable();
 		scroll = new JScrollPane(table);
 		
 		p_detailBox= new JPanel();
-		p_detail = new JPanel();
+		p_detail = new JPanel() {
+			public void paint(Graphics g) {
+				g.drawImage(detailImg, 0, 0, ProductManage.this);
+			}
+		};
 		p_info = new JPanel();
 		la_name = new JLabel("제품명:티셔츠");
 		la_price = new JLabel("가격:80,000원");
@@ -105,7 +117,6 @@ public class ProductManage extends Page{
 		p_thumb.setPreferredSize(new Dimension(120, 120));
 		p_detail.setBackground(Color.BLACK);
 		p_detail.setPreferredSize(new Dimension(180, 180));
-		p_info.setBackground(Color.RED);
 		
 		la_name.setPreferredSize(new Dimension(350, 50));
 		la_price.setPreferredSize(new Dimension(350, 50));
@@ -129,6 +140,7 @@ public class ProductManage extends Page{
 		p_west.add(p_thumb);
 		p_west.add(bt_regist);
 		p_west.add(bt_list);
+		p_west.add(bt_del);
 		
 		add(p_west, BorderLayout.WEST);
 		p_content.add(scroll);
@@ -159,6 +171,27 @@ public class ProductManage extends Page{
 		bt_list.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				getList();
+			}
+		});
+		
+		bt_del.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				int result=JOptionPane.showConfirmDialog(ProductManage.this, "삭제하시겠습니까?");
+				
+				if(result == JOptionPane.OK_OPTION) {
+					if(deleteFile()) {//파일이 삭제가 되면.. 
+						delete();//db삭제
+					}
+				}
+			}
+		});
+		
+		//테이블과 리스너 연결 
+		table.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				//상세보기!!
+				select();
 			}
 		});
 		
@@ -308,6 +341,104 @@ public class ProductManage extends Page{
 		}finally {
 			shopApp.connectionManager.closeDB(pstmt, rs);
 		}
+	}
+	
+	//레코드 한건 가져오기!!
+	public void select() {
+		int row=table.getSelectedRow();
+		
+		//자바에서는 기본자료형과 이 기본자료형의 객체인 Wrapper클래스
+		//간 자동형변환을 지원해주는데, 이러한 현상 가리켜 
+		//Boxing :  기본자료형 감싸서 객체화시킨다 
+		//UnBoxing : 객체자료형을 기본자료형으로 변환
+		//Integer x = new Integer(3);
+		//int y=x;
+		
+		product_id=Integer.parseInt((String)table.getValueAt(row, 0));//(x,0)번째에 있다.. 
+		
+		String sql="select * from product where product_id="+product_id;
+		System.out.println(sql);
+		
+		
+		PreparedStatement pstmt=null;//쿼리수행 객체
+		ResultSet rs=null;//레코드를 담을 객체
+		
+		try {
+			pstmt=shopApp.con.prepareStatement(sql);
+			rs=pstmt.executeQuery();//select문인 경우 executeQuery()
+			
+			//레코드 한건은 , 자바분야에서는 하나의 인스턴스로 받으면 된다!!
+			Product product = new Product();
+			
+			//rs의 데이터를 자바인스턴스에 넣기!!
+			if(rs.next()) {//레코드가 있을때만...
+				product.setProduct_id(rs.getInt("product_id"));
+				product.setName(rs.getString("name"));
+				product.setPrice(rs.getInt("price"));
+				product.setBrand(rs.getString("brand"));
+				product.setImg(rs.getString("img"));				
+			}	
+			//모두 담았으므로, Product VO 이용하여 화면에 출력!!
+			//상세이미지  repaint(), 제품명,가격,브랜드 라벨에 값 채우기!!
+			detailImg=kit.getImage("D:/web_app/java_workspace/Project0511/data/"+product.getImg());
+			detailImg=detailImg.getScaledInstance(180, 180, java.awt.Image.SCALE_SMOOTH);
+			p_detail.repaint();
+			
+			//제품명,가격,브랜드 라벨
+			la_name.setText("제품명 : "+product.getName());
+			la_price.setText("가격: "+Formatter.getCurrency(product.getPrice()));
+			la_brand.setText("브랜드명: "+product.getBrand());
+			
+			//선택시 현재 보고있는 이미지정보를 멤버변수로 저장!!
+			delFile = product.getImg();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			shopApp.connectionManager.closeDB(pstmt, rs);
+		}
+	}
+	
+	public void delete() {
+		//선택한 상품이 있는지 여부 체크(유효성 체크)
+		if(product_id==0) {
+			JOptionPane.showMessageDialog(this, "삭제하실 제품을 선택하세요");
+			return;//실행부의 진행을 막자!!, 아래코드로 못내려가게..
+		}
+		
+		int result=JOptionPane.showConfirmDialog(this, "삭제하시겠습니까?");
+		if(result == JOptionPane.OK_OPTION) {
+			String sql="delete from product where product_id="+product_id;
+			System.out.println(sql);
+			
+			PreparedStatement pstmt=null;
+			try {
+				pstmt=shopApp.con.prepareStatement(sql);
+				
+				//row반환값은 이 쿼리에 의해 영향을 받은 레코드 수를 반환!!
+				int row=pstmt.executeUpdate();
+				if(row==0) {
+					JOptionPane.showMessageDialog(this, "삭제실패");
+				}else {
+					JOptionPane.showMessageDialog(this, "삭제성공");
+					getList();//다시 테이블 갱신!!
+				}
+				product_id=0;
+				//이미지도 삭제!!
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}finally {
+				shopApp.connectionManager.closeDB(pstmt);
+			}
+		}
+	}
+	
+	//이미지 삭제 
+	public boolean deleteFile() {
+		//삭제하고싶은 파일에 대한 파일객체를 생성해야 한다!!
+		File file=new File("D:/web_app/java_workspace/Project0511/data/"+delFile);
+		return file.delete();
 	}
 }
 

@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -42,6 +43,7 @@ public class ShoppingMain extends JFrame {
 
 	JTable table;
 	JScrollPane scroll;
+	JoinModel joinModel;
 	
 	//데이터베이스 연동 관련 
 	ConnectionManager connectionManager;
@@ -60,7 +62,7 @@ public class ShoppingMain extends JFrame {
 		bt_regist = new JButton("등록");
 		bt_list = new JButton("목록");
 		
-		table = new JTable();
+		table = new JTable(joinModel=new JoinModel());
 		scroll = new JScrollPane(table);
 		
 		//서쪽 패널에 컴포넌트 부착 
@@ -245,9 +247,9 @@ public class ShoppingMain extends JFrame {
 	public void getList() {
 		StringBuilder sql=new StringBuilder();
 		
-		sql.append("select t.topcategory_id, t.name");
-		sql.append(", s.subcategory_id, s.name ");
-		sql.append(", goods_id, g.name,price,brand");
+		sql.append("select t.topcategory_id as topcategory_id, t.name as top_name");
+		sql.append(", s.subcategory_id as subcategory_id, s.name as sub_name ");
+		sql.append(", goods_id, g.name as goods_name ,price,brand");
 		sql.append(" from topcategory t, subcategory s, goods g");
 		sql.append(" where t.topcategory_id=s.topcategory_id ");
 		sql.append(" and");
@@ -264,6 +266,8 @@ public class ShoppingMain extends JFrame {
 			
 			//rs에는 3개의 테이블이 합쳐진 레코드가 있기 때문에, 이 데이터들을
 			//우리가 정의한 VO 에 찢어서 넣어야 한다!!
+			List list=new ArrayList();
+			
 			while(rs.next()) {
 				TopCategory topCategory=new TopCategory();
 				SubCategory subCategory=new SubCategory();
@@ -274,17 +278,24 @@ public class ShoppingMain extends JFrame {
 				goods.setSubCategory(subCategory);
 				
 				//rs의 데이터를 VO 들에 적절히 옮겨심자!!
-				topCategory.setTopcategory_id(rs.getInt("t.topcategory_id"));
-				topCategory.setName(rs.getString("t.name"));
+				topCategory.setTopcategory_id(rs.getInt("topcategory_id"));
+				topCategory.setName(rs.getString("top_name"));
 				
-				subCategory.setSubcategory_id(rs.getInt("s.subcategory_id"));
-				subCategory.setName(rs.getString("s.name"));
+				subCategory.setSubcategory_id(rs.getInt("subcategory_id"));
+				subCategory.setName(rs.getString("sub_name"));
 				
 				goods.setGoods_id(rs.getInt("goods_id"));
-				goods.setName(rs.getString("g.name"));
+				goods.setName(rs.getString("goods_name"));
 				goods.setPrice(rs.getInt("price"));
 				goods.setBrand(rs.getString("brand"));
+				
+				
+				//완성된 Goods VO를 리스트에 추가!!
+				list.add(goods);
 			}
+			//완성된 리스트를  JoinModel 이 보유한 리스트에 대입!!
+			joinModel.goodsList=(ArrayList)list;
+			table.updateUI();//테이블 새로 고침!!
 			
 		} catch (SQLException e) {
 			e.printStackTrace();

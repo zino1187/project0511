@@ -24,6 +24,7 @@ public class ShopApp extends JFrame implements ActionListener{
 	ConnectionManager connectionManager;
 	Connection con;//패널들 즉 페이지들이 모두 접근할 수 있도록 
 							//부모 컨테이너인 윈도우에 보유해놓자!!
+	boolean hasAuth=false;//로그인한 경우true, 안한경우 false
 	
 	public ShopApp() {
 		p_north 		= new JPanel();
@@ -34,8 +35,8 @@ public class ShopApp extends JFrame implements ActionListener{
 		m_chat 			= new JButton("1:1채팅");
 		
 		//페이지 구성하기 
-		pages[0]=new ProductManage(this,"상품관리",Color.YELLOW,700,500,true);
-		pages[1]=new ShoppingMain(this,"쇼핑몰메인",Color.RED,700,500,false);
+		pages[0]=new ProductManage(this,"상품관리",Color.YELLOW,700,500,false);
+		pages[1]=new ShoppingMain(this,"쇼핑몰메인",Color.RED,700,500,true);
 		pages[2]=new Login(this,"로그인",Color.BLUE,700,500,false);
 		pages[3]=new Chatting(this,"1:1채팅",Color.GREEN,700,500,false);
 		
@@ -81,7 +82,7 @@ public class ShopApp extends JFrame implements ActionListener{
 		if(con==null) {
 			JOptionPane.showMessageDialog(this, "데이터베이 접속 실패");
 		}else {
-			JOptionPane.showMessageDialog(this, "데이터베이 접속 성공");
+			//JOptionPane.showMessageDialog(this, "데이터베이 접속 성공");
 		}
 		
 		//접속해제 
@@ -91,6 +92,13 @@ public class ShopApp extends JFrame implements ActionListener{
 				System.exit(0);//프로세스 종료
 			}
 		});
+		
+		//유저가 보게되는 쇼핑화면!!!
+		showPage(1);
+		ShoppingMain main=(ShoppingMain)pages[1];
+		main.removeChild();// 기존컴포넌트 삭제
+		main.selectAll();//새로 구성
+		main.updateUI();
 	}
 	
 	
@@ -101,6 +109,11 @@ public class ShopApp extends JFrame implements ActionListener{
 			showPage(0);
 		}else if(obj==m_main) {
 			showPage(1);
+			//ShoppingMain 클래스의  selectAll() 메서드 호출하자!!
+			//이 시점엔 이미 데이터베이스와의 접속이 완료된 이후라서 안전!!
+			ShoppingMain main=(ShoppingMain)pages[1];
+			main.removeChild();// 기존컴포넌트 삭제
+			main.selectAll();//새로 구성
 		}else if(obj==m_login) {
 			showPage(2);			
 		}else if(obj==m_chat) {
@@ -111,6 +124,24 @@ public class ShopApp extends JFrame implements ActionListener{
 	//화면전환 메서드 
 	//보여질 페이지를 인수로 넘기면 됨!!
 	public void showPage(int page) {
+		//로그인하지 않은 경우 처리!!!
+		if(!hasAuth && page==0) {
+			JOptionPane.showMessageDialog(this, "로그인이 필요한 서비스입니다");
+			return;
+		}
+		//hasAuth가 현재 로그인한 상태이면서, 원하는페이지가 2일경우 
+		//로그아웃 버튼을 누른 사람이다!! 이경우 로그아웃 처리해줘야 한다!!
+		if(hasAuth && page==2) {
+			int ans=JOptionPane.showConfirmDialog(this, "로그아웃하시겠습니까?");
+			
+			if(ans==JOptionPane.OK_OPTION) {//로그아웃 원하는 사람..
+				hasAuth=false;
+				m_login.setText("Login");
+				JOptionPane.showMessageDialog(this, "로그아웃 되었습니다");
+			}
+			return;
+		}
+		
 		//윈도우의 제목을 패널의 제목으로 교체!!
 		this.setTitle(pages[page].title);
 		
