@@ -31,7 +31,11 @@ public class EchoClient extends JFrame{
 	JTextField t_input;
 	Socket client;
 	String ip="";//따라치지 말기,나의 ip 적기
-	int port=0;//
+	int port=7777;//
+	
+	//메세지 주고받기 위한 입출력 스트림 
+	BufferedReader buffr;
+	BufferedWriter buffw;
 	
 	public EchoClient() {
 		p_north = new JPanel();
@@ -63,13 +67,24 @@ public class EchoClient extends JFrame{
 		//버튼에 리스너 연결 
 		bt.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				connect();//접속
 			}
 		});
 		
 		//텍스트필드에 리스너 연결 
 		t_input.addKeyListener(new KeyAdapter() {
 			public void keyReleased(KeyEvent e) {
-
+				//엔터치면 메시지 보내기!!
+				int key = e.getKeyCode();
+				
+				if(key == KeyEvent.VK_ENTER) {
+					
+					//텍스트필드에서 쳐넣은 메시지 전달!!
+					String msg=t_input.getText();
+					send(msg);//보내고
+					t_input.setText("");//입력값 비우기!!
+					listen();//받고
+				}
 			}
 		});
 	}
@@ -77,8 +92,34 @@ public class EchoClient extends JFrame{
 	public void connect() {
 		try {
 			client = new Socket(choice.getSelectedItem() , port);
+			
+			//접속과 동시에 대화용 소켓으로부터 스트림 뽑기!!
+			buffr=new BufferedReader(new InputStreamReader(client.getInputStream()));
+			buffw=new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//서버에 메시지 보내기!!
+	public void send(String msg) {
+		try {
+			buffw.write(msg+"\n");
+			buffw.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//메시지 받기 
+	public void listen() {
+		String msg=null;
+		try {
+			msg=buffr.readLine();//청취!!
+			area.append(msg+"\n");//log 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
