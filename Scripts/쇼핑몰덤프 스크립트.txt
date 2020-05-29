@@ -1,0 +1,26 @@
+insert into topcategory(topcategory_id, name) values(seq_topcategory.nextval, '가전');
+insert into topcategory(topcategory_id, name) values(seq_topcategory.nextval, '패션');
+insert into topcategory(topcategory_id, name) values(seq_topcategory.nextval, '주방용품');
+insert into topcategory(topcategory_id, name) values(seq_topcategory.nextval, '식품');
+
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,1,'TV');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,1,'냉장고');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,1,'에어컨');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,1,'인덕션');
+
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,2,'상의');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,2,'하의');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,2,'액세서리');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,2,'가방');
+
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,3,'냄비');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,3,'후라이팬');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,3,'그릇');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,3,'수저');
+
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,4,'육류');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,4,'채소류');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,4,'유제품');
+insert into subcategory(subcategory_id, topcategory_id, name) values(seq_subcategory.nextval,4,'건어물');
+
+commit;

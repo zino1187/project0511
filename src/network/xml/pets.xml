@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	xml  은  html 과 형제이다!
+	SGML 마크업 언어로 부터 파생됨...
+	HTML : how to show design~~ how to design 
+	           전자문서로서 어떻게 보여질지가 관심 사항임 
+	XML : how to show data 
+	           전자문서로서 어떻게 데이터를 구성할지...
+             텍스트기반의 데이터베이스!!!
+             
+   주의) html 은 태그명이 정해져 있다..
+         tag 명은 w3에서 표준으로 정해진것이므로 반드시 정해진 것만 써야
+          함 
+        ex)  body(O)  bady(X)
+        xml 은 태그를 사용자(개발자)가 정의할 수 있다.
+         따라서 xml을 태그를 사용자정의 태그라 한다!!             
+-->
+<pets>
+	<pet>
+		<name>도마뱀</name>
+		<age>3</age>
+		<gender>남</gender>
+	</pet>
+	<pet>
+		<name>사마귀</name>
+		<age>1</age>
+		<gender>여</gender>
+	</pet>
+	<pet>
+		<name>금붕어</name>
+		<age>2</age>
+		<gender>남</gender>
+	</pet>
+
+</pets>
+
+
+
+
+
+
+
+
